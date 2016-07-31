@@ -1,0 +1,21 @@
+node {
+    dir(PROJECT_PATH) {
+        try {
+            stage 'Build'
+            bat 'mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V'
+            
+            if(!(TEST=='true'))
+                return 
+                
+            stage 'Test'
+            bat 'mvn test'
+            step([$class: 'JUnitResultArchiver', testResults: 'target/surefire-reports/TEST-*.xml'])
+        } catch (err) {
+        if(!(TEST=='true'))
+            slackSend color: 'danger', message: "   ‍      ‍   :heavy_multiplication_x: Java <${env.BUILD_URL}|Build#${env.BUILD_NUMBER}>: ${API_DEF_NAME} API - SDK compilation failed."
+        else
+            slackSend color: 'danger', message: "   ‍      ‍   :heavy_multiplication_x: Java <${env.BUILD_URL}|Build#${env.BUILD_NUMBER}>: ${API_DEF_NAME} API - SDK tests failed."
+        throw err
+    }
+    }
+}
